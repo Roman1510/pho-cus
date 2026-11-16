@@ -1,73 +1,50 @@
-# React + TypeScript + Vite
+# pho-cus
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A calm, local desktop focus timer built with React, TypeScript, and Tauri 2. Mac menu bar and Windows system tray support live in the Rust backend.
 
-Currently, two official plugins are available:
+## Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Install Node.js and Rust, plus the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
+npm run tauri dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`npm run dev` opens a browser-only preview. It has a lightweight timer simulation; native tray controls, persistent settings, and desktop notifications require Tauri. Browser preview settings are temporary. Port 5173 must be free for desktop development.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm run build
+npm run lint
+cargo test --manifest-path src-tauri/Cargo.toml
+npm run tauri build
 ```
+
+Build installers on each target operating system. Signing and notarization are not configured.
+
+## Included
+
+- Click-to-edit duration, quick presets, focus/short/long-break sessions.
+- Adjustable session lengths, long-break frequency, and automatic transitions.
+- Four calm themes, synthesized bowl/bell chimes, volume and sound preview.
+- Offline synthesized brown/white ambient noise, separate volume, optional audio during breaks.
+- Native tray menu: show window, start/pause, skip, reset, settings, quit.
+- Close to tray, start hidden on next launch, always on top, optional Mac menu bar countdown. Windows uses a tooltip and menu for the countdown.
+- Native desktop notifications with optional stretch reminders.
+- Settings saved to `settings.json` in Tauri's platform application config directory.
+
+## Timer behavior
+
+The Rust timer owns session state. Its deadline is checked every 250 milliseconds independently of the webview. Hiding the window does not stop timing. After sleep, an elapsed session completes once and the next session begins from wake time if auto-start is enabled. Skips do not count as completed focus sessions and leave the next session paused. Changing duration pauses and resets the current session. Reset returns to the selected duration. Quitting stops the timer; relaunch starts a fresh focus session.
+
+The UI polls native state every 500 milliseconds. Desktop notification delivery runs natively; custom chimes and ambient audio currently use Web Audio and need an initial interaction in the window. Chimes may be delayed if the OS suspends the webview. System notification permissions / Focus settings can also suppress notifications. Windows notifications should be tested from an installed build.
+
+## Next iterations
+
+- Test installed builds on macOS and Windows, including tray recovery, sleep/wake, notification permissions, and sound while hidden.
+- Persist interrupted sessions and ambient preferences; add editable preset sets.
+- Native background chime playback, custom sound files, licensed nature recordings.
+- Separate mini timer, launch at login, optional Mac Dock visibility.
+- Evaluate official YouTube / SoundCloud embeds before enabling remote audio; none are loaded in this version.
+
+The Rust tests cover elapsed deadlines after sleep, pause/resume, long-break cadence, and skip behavior. The browser preview is a design aid, not a replacement for native platform testing.
